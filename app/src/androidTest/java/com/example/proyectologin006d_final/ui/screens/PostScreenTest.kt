@@ -5,7 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.example.proyectologin006d_final.data.model.Post
-import com.example.proyectologin006d_final.viewmodel.PostsViewModel
+import com.example.proyectologin006d_final.viewmodel.PostViewModel
 import org.junit.Rule
 import org.junit.Test
 

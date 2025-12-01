@@ -10,11 +10,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.lifecycle.viewmodel.compose.viewModel
-
 // Importa tus pantallas principales del proyecto
 import com.example.proyectologin006d_final.ui.login.LoginScreen
 import com.example.proyectologin006d_final.ui.register.RegisterScreen
-import com.example.proyectologin006d_final.ui.home.MuestrasDatosScreen
+import com.example.proyectologin006d_final.ui.home.MuestraDatosScreen
 
 // Importa las pantallas de API REST (asegúrate de que estén disponibles)
 import com.example.proyectologin006d_final.ui.screens.PostScreen
@@ -52,7 +51,7 @@ fun AppNav() {
         }
 
         composable("home") {
-            HomeScreen(navController = navController)
+            MuestraDatosScreen(navController = navController)
         }
 
         // Pantalla de API REST

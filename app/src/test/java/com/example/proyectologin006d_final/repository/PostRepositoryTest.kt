@@ -3,7 +3,7 @@ package com.example.proyectologin006d_final
 // Importa la clase Post del modelo de datos
 import com.example.proyectologin006d_final.data.model.Post
 // Importa la interfaz ApiService para llamadas a la API
-import com.example.proyectologin006d_final.remote.ApiService
+import com.example.proyectologin006d_final.data.remote.ApiService
 // Importa el repositorio que se va a testear
 import com.example.proyectologin006d_final.repository.PostRepository
 // Importa el estilo StringSpec de Kotest para escribir tests
