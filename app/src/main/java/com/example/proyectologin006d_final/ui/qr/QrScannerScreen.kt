@@ -19,7 +19,8 @@ import com.example.proyectologin006d_final.utils.QrScanner
 fun QrScannerScreen(
     viewModel: QrViewModel,
     hasCameraPermission: Boolean,
-    onRequestPermission: () -> Unit
+    onRequestPermission: () -> Unit,
+    onQrDetected: (String) -> Unit
 ) {
     val qrResult by viewModel.qrResult.observeAsState()
     val context = LocalContext.current
@@ -65,10 +66,13 @@ fun QrScannerScreen(
             ) {
                 QrScanner(
                     onQrCodeScanned = { qrContent ->
-                        // Procesar el QR detectado
-                        viewModel.onQrDetected(qrContent)
-                        isScanning = false
-                        Toast.makeText(context, "QR detectado!", Toast.LENGTH_SHORT).show()
+                        if (isScanning) {
+                            // Procesar el QR detectado y notificar al contenedor
+                            viewModel.onQrDetected(qrContent)
+                            onQrDetected(qrContent)
+                            isScanning = false
+                            Toast.makeText(context, "QR detectado!", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     modifier = Modifier.fillMaxSize()
                 )
