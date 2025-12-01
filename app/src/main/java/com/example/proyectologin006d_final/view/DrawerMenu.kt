@@ -94,8 +94,10 @@ fun DrawerMenu(
             item{ // inicio item 4
                 NavigationDrawerItem( // inicio DrawerItem
                     label = {Text("Carrito de Compras")},
-                    selected =false,
-                    onClick = { /* Sin funcionalidad - solo visual */
+                    selected = currentRoute == "cart/$username",
+                    onClick = { 
+                        navController.navigate("cart/$username")
+                        onCloseDrawer()
                     }, // fin onclick
                     icon = {Icon(Icons.Default.ShoppingCart ,  contentDescription ="Carrito" )}
 

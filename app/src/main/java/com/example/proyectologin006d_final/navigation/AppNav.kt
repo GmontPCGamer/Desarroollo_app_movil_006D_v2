@@ -12,6 +12,7 @@ import com.example.proyectologin006d_final.ui.register.RegisterScreen
 import com.example.proyectologin006d_final.ui.profile.ProfileScreen
 import com.example.proyectologin006d_final.ui.catalog.CatalogScreen
 import com.example.proyectologin006d_final.ui.gamification.LevelUpScreen
+import com.example.proyectologin006d_final.ui.cart.CartScreen
 import com.example.proyectologin006d_final.view.DrawerMenu
 import com.example.proyectologin006d_final.view.ProductoFormScreen
 import com.example.proyectologin006d_final.ui.map.MapScreen
@@ -67,6 +68,19 @@ fun AppNav() {
         ) { backStackEntry ->
             val username = backStackEntry.arguments?.getString("username").orEmpty()
             LevelUpScreen(navController = navController, username = username)
+        }
+
+        // Ruta del Carrito de Compras
+        composable(
+            route = "cart/{username}",
+            arguments = listOf(
+                navArgument("username") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val username = backStackEntry.arguments?.getString("username").orEmpty()
+            CartScreen(navController = navController, username = username)
         }
 
         composable(

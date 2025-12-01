@@ -1,15 +1,20 @@
 package com.example.proyectologin006d_final.ui.catalog
 
+import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddShoppingCart
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,42 +22,26 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.proyectologin006d_final.data.model.Producto
 import com.example.proyectologin006d_final.ui.theme.LevelUpBlack
 import com.example.proyectologin006d_final.ui.theme.LevelUpBlue
 import com.example.proyectologin006d_final.ui.theme.LevelUpGreen
 import com.example.proyectologin006d_final.ui.theme.LevelUpWhite
+import com.example.proyectologin006d_final.ui.cart.CartViewModel
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.proyectologin006d_final.viewmodel.CartViewModel
-import com.example.proyectologin006d_final.viewmodel.CartViewModelFactory
-import com.example.proyectologin006d_final.viewmodel.ProductoViewModel
-import com.example.proyectologin006d_final.viewmodel.ProductoViewModelFactory
-import com.example.proyectologin006d_final.data.repository.ProductoRepository
-import com.example.proyectologin006d_final.data.database.ProductoDatabase
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 data class ProductCategory(
     val id: String,
@@ -77,10 +66,25 @@ fun CatalogScreen(
     username: String,
     cartViewModel: CartViewModel = viewModel()
 ) {
-    val cartState by cartViewModel.cartState.collectAsState()
+    val uiState by cartViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
     
+    // Cargar items del carrito al iniciar
+    LaunchedEffect(username) {
+        cartViewModel.loadCartItems(username)
+    }
+    
+    // Mostrar mensajes
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let { message ->
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
+            )
+            cartViewModel.clearMessage()
+        }
+    }
+
     val categories = listOf(
         ProductCategory("juegos-mesa", "Juegos de Mesa", "🎲", LevelUpBlue),
         ProductCategory("accesorios", "Accesorios", "🎮", LevelUpGreen),
@@ -107,6 +111,7 @@ fun CatalogScreen(
     )
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { 
@@ -117,22 +122,25 @@ fun CatalogScreen(
                     )
                 },
                 actions = {
-                    val cartState by cartViewModel.cartState.collectAsState()
-                    IconButton(onClick = {
-                        navController.navigate("paymentExpress/$username")
-                    }) {
-                        BadgedBox(
-                            badge = {
-                                if (cartState.totalItems > 0) {
-                                    Badge {
-                                        Text(text = cartState.totalItems.toString())
-                                    }
+                    // Botón del carrito con badge
+                    BadgedBox(
+                        badge = {
+                            if (uiState.totalItems > 0) {
+                                Badge(
+                                    containerColor = LevelUpGreen,
+                                    contentColor = LevelUpBlack
+                                ) {
+                                    Text("${uiState.totalItems}")
                                 }
                             }
+                        }
+                    ) {
+                        IconButton(
+                            onClick = { navController.navigate("cart/$username") }
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ShoppingCart,
-                                contentDescription = "Carrito",
+                                contentDescription = "Ir al carrito",
                                 tint = LevelUpWhite
                             )
                         }
@@ -142,9 +150,6 @@ fun CatalogScreen(
                     containerColor = LevelUpBlack
                 )
             )
-        },
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
         }
     ) { innerPadding ->
         Column(
@@ -226,94 +231,25 @@ fun CatalogScreen(
             )
 
             LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(sampleProducts) { product ->
                     ProductCard(
                         product = product,
-                        onAddToCart = { uiProduct ->
-                            // Convertimos Product de la UI a Producto de dominio
-                            val producto = Producto(
-                                codigo = uiProduct.id,
-                                categoria = uiProduct.category,
-                                nombre = uiProduct.name,
-                                precio = uiProduct.price,
-                                descripcion = uiProduct.description,
-                                cantidad = "1",
-                                direccion = "",
-                                fabricante = uiProduct.manufacturer
+                        onClick = { /* Sin funcionalidad - solo visual */ },
+                        onAddToCart = {
+                            cartViewModel.addToCart(
+                                productId = product.id,
+                                productName = product.name,
+                                productPrice = product.price,
+                                category = product.category,
+                                description = product.description,
+                                manufacturer = product.manufacturer,
+                                username = username
                             )
-                            cartViewModel.addToCart(producto)
-                            // Mostrar snackbar de confirmación
-                            scope.launch {
-                                snackbarHostState.showSnackbar(
-                                    message = "${uiProduct.name} agregado al carrito",
-                                    actionLabel = "Ver carrito",
-                                    duration = androidx.compose.material3.SnackbarDuration.Short
-                                ).let { result ->
-                                    if (result == SnackbarResult.ActionPerformed) {
-                                        navController.navigate("paymentExpress/$username")
-                                    }
-                                }
-                            }
                         }
                     )
-                }
-                
-                // Resumen del carrito al final de la lista
-                item {
-                    if (cartState.items.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = LevelUpGreen.copy(alpha = 0.2f)
-                            ),
-                            onClick = {
-                                navController.navigate("paymentExpress/$username")
-                            }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "Carrito: ${cartState.totalItems} ${if (cartState.totalItems == 1) "producto" else "productos"}",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = LevelUpWhite,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = "Total: ${cartState.totalAmount.toInt()} CLP",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = LevelUpGreen,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                Button(
-                                    onClick = {
-                                        navController.navigate("paymentExpress/$username")
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = LevelUpGreen
-                                    )
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ShoppingCart,
-                                        contentDescription = "Ir al carrito",
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Pagar")
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -389,8 +325,12 @@ fun CategoryCard(
 @Composable
 fun ProductCard(
     product: Product,
-    onAddToCart: (Product) -> Unit
+    onClick: () -> Unit,
+    onAddToCart: () -> Unit = {}
 ) {
+    // Scope para coroutines
+    val coroutineScope = rememberCoroutineScope()
+    
     // Animación simple de escala al presionar (usa InteractionSource para detectar press)
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
@@ -399,13 +339,26 @@ fun ProductCard(
         animationSpec = tween(durationMillis = 120),
         label = "press-scale"
     )
+    
+    // Animación para el botón de agregar al carrito
+    var isAddingToCart by remember { mutableStateOf(false) }
+    val addToCartScale by animateFloatAsState(
+        targetValue = if (isAddingToCart) 1.2f else 1f,
+        animationSpec = tween(durationMillis = 150),
+        label = "add-cart-scale"
+    )
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .scale(scale),
-        colors = CardDefaults.cardColors(containerColor = LevelUpBlack),
-        shape = RoundedCornerShape(8.dp)
+            .scale(scale)
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick
+            ),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier
@@ -414,7 +367,7 @@ fun ProductCard(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 Column(
                     modifier = Modifier.weight(1f)
@@ -423,9 +376,7 @@ fun ProductCard(
                         text = product.name,
                         style = MaterialTheme.typography.titleMedium,
                         color = LevelUpWhite,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = product.category,
@@ -436,9 +387,7 @@ fun ProductCard(
                     Text(
                         text = product.description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = LevelUpWhite.copy(alpha = 0.7f),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        color = LevelUpWhite.copy(alpha = 0.7f)
                     )
                     Text(
                         text = "Fabricante: ${product.manufacturer}",
@@ -446,7 +395,7 @@ fun ProductCard(
                         color = LevelUpWhite.copy(alpha = 0.5f)
                     )
                 }
-
+                
                 // Animación decorativa simple para el precio
                 var priceGlowing by remember { mutableStateOf(false) }
                 val priceAlpha by animateFloatAsState(
@@ -454,14 +403,14 @@ fun ProductCard(
                     animationSpec = tween(1500),
                     label = "price-alpha"
                 )
-
+                
                 LaunchedEffect(Unit) {
                     while (true) {
                         priceGlowing = !priceGlowing
                         kotlinx.coroutines.delay(1500)
                     }
                 }
-
+                
                 Text(
                     text = product.price,
                     style = MaterialTheme.typography.titleLarge,
@@ -469,14 +418,45 @@ fun ProductCard(
                     fontWeight = FontWeight.Bold
                 )
             }
-
+            
             Spacer(modifier = Modifier.height(12.dp))
-
+            
+            // Botón de agregar al carrito
             Button(
-                onClick = { onAddToCart(product) },
-                modifier = Modifier.align(Alignment.End)
+                onClick = {
+                    isAddingToCart = true
+                    onAddToCart()
+                    coroutineScope.launch {
+                        delay(150)
+                        isAddingToCart = false
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp)
+                    .scale(addToCartScale),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = LevelUpGreen,
+                    contentColor = LevelUpBlack
+                ),
+                shape = RoundedCornerShape(10.dp)
             ) {
-                Text(text = "Agregar al carrito")
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AddShoppingCart,
+                        contentDescription = "Agregar al carrito",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Agregar al Carrito",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
             }
         }
     }
