@@ -81,3 +81,4 @@ class AuthRepositoryTest {
         assertFalse("El login debería fallar con ambas credenciales incorrectas", resultado)
     }
 }
+//comentario

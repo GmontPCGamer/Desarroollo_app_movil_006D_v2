@@ -106,3 +106,4 @@ class ProductoDaoTest {
         assertEquals("El nombre debe coincidir con el del producto insertado.", "Producto Autogen", productoInsertado.nombre)
     }
 }
+//comentario

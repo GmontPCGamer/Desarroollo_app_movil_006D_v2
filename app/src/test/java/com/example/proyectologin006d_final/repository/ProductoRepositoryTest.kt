@@ -66,3 +66,4 @@ class ProductoRepositoryTest {
         verify(exactly = 1) { productoDao.obtenerProductos() }
     }
 }
+//comentario
