@@ -211,7 +211,11 @@ fun CartScreen(
                     // Resumen y botón de checkout
                     CartSummary(
                         totalItems = uiState.totalItems,
+                        subtotal = uiState.subtotal,
+                        discountPercent = uiState.discountPercent,
+                        discountAmount = uiState.discountAmount,
                         totalPrice = uiState.totalPrice,
+                        isDuocUser = uiState.isDuocUser,
                         onCheckout = { cartViewModel.checkout(username) },
                         isLoading = uiState.isLoading
                     )
@@ -471,7 +475,11 @@ fun CartItemCard(
 @Composable
 fun CartSummary(
     totalItems: Int,
+    subtotal: Double,
+    discountPercent: Int,
+    discountAmount: Double,
     totalPrice: Double,
+    isDuocUser: Boolean,
     onCheckout: () -> Unit,
     isLoading: Boolean
 ) {
@@ -518,6 +526,50 @@ fun CartSummary(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Subtotal:",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = LevelUpWhite,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = formatPrice(subtotal),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = LevelUpGreen,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            if (discountPercent > 0 && discountAmount > 0.0) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = if (isDuocUser) "Descuento DUOC ${discountPercent}%"
+                        else "Descuento aplicado ${discountPercent}%",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = LevelUpGreen
+                    )
+                    Text(
+                        text = "-${formatPrice(discountAmount)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = LevelUpGreen,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

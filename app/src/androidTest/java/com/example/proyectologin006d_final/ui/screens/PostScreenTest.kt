@@ -21,7 +21,7 @@ class PostScreenTest {
             Post(userId = 2, id = 2, title = "Titulo 2", body = "Contenido 2")
         )
 
-        val fakeViewModel = PostsViewModel().apply {
+        val fakeViewModel = PostViewModel().apply {
             // Usa el método loadPosts si existe, o asigna directamente
             _postList.value = fakePosts
         }

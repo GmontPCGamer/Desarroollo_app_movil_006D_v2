@@ -5,9 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectologin006d_final.data.database.ProductoDatabase
 import com.example.proyectologin006d_final.data.model.CartItem
-import com.example.proyectologin006d_final.data.model.LevelUpCalculator
 import com.example.proyectologin006d_final.data.repository.CartRepository
 import com.example.proyectologin006d_final.data.repository.LevelUpRepository
+import com.example.proyectologin006d_final.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +17,11 @@ import kotlinx.coroutines.launch
 data class CartUiState(
     val cartItems: List<CartItem> = emptyList(),
     val totalItems: Int = 0,
+    val subtotal: Double = 0.0,
+    val discountPercent: Int = 0,
+    val discountAmount: Double = 0.0,
     val totalPrice: Double = 0.0,
+    val isDuocUser: Boolean = false,
     val isLoading: Boolean = false,
     val message: String? = null,
     val isCheckoutSuccess: Boolean = false,
@@ -29,6 +33,7 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: CartRepository
     private val levelUpRepository: LevelUpRepository
+    private val userRepository: UserRepository
     
     private val _uiState = MutableStateFlow(CartUiState())
     val uiState: StateFlow<CartUiState> = _uiState.asStateFlow()
@@ -37,6 +42,7 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
         val database = ProductoDatabase.getDatabase(application)
         repository = CartRepository(database.cartDao())
         levelUpRepository = LevelUpRepository(database.levelUpDao())
+        userRepository = UserRepository(database.userDao())
     }
 
     // Cargar items del carrito para un usuario específico
@@ -65,9 +71,38 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
         // Observar el total del precio
         viewModelScope.launch {
             repository.getCartTotal(username).collectLatest { total ->
+                val subtotal = total ?: 0.0
+                val currentState = _uiState.value
+                val discountPercent = if (currentState.isDuocUser) 20 else 0
+                val discountAmount = subtotal * discountPercent / 100.0
+                val finalTotal = (subtotal - discountAmount).coerceAtLeast(0.0)
                 _uiState.value = _uiState.value.copy(
-                    totalPrice = total ?: 0.0
+                    subtotal = subtotal,
+                    discountPercent = discountPercent,
+                    discountAmount = discountAmount,
+                    totalPrice = finalTotal
                 )
+            }
+        }
+
+        // Cargar datos del usuario para saber si es DUOC
+        viewModelScope.launch {
+            try {
+                val user = userRepository.getUserByUsername(username)
+                val isDuoc = user?.isDuocUser == true
+                val currentSubtotal = _uiState.value.subtotal
+                val discountPercent = if (isDuoc) 20 else 0
+                val discountAmount = currentSubtotal * discountPercent / 100.0
+                val finalTotal = (currentSubtotal - discountAmount).coerceAtLeast(0.0)
+
+                _uiState.value = _uiState.value.copy(
+                    isDuocUser = isDuoc,
+                    discountPercent = discountPercent,
+                    discountAmount = discountAmount,
+                    totalPrice = if (currentSubtotal > 0) finalTotal else _uiState.value.totalPrice
+                )
+            } catch (_: Exception) {
+                // si falla, simplemente no aplicamos descuento DUOC
             }
         }
     }
