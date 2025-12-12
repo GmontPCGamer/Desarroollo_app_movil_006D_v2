@@ -3,13 +3,13 @@ package com.example.proyectologin006d_final.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectologin006d_final.data.model.Comentario
-import com.example.proyectologin006d_final.data.repository.ComentarioRepositorio
+import com.example.proyectologin006d_final.data.repository.ComentarioRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class ComentarioViewModel(
-    private val repositorio: ComentarioRepositorio = ComentarioRepositorio()
+    private val repositorio: ComentarioRepository = ComentarioRepository()
 ) : ViewModel() {
 
     private val _comentarios = MutableStateFlow<List<Comentario>>(emptyList())
