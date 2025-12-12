@@ -146,7 +146,7 @@ fun DrawerMenu(
                         )
                     },
                     label = {
-                        Text(text = "Posts (API)")
+                        Text(text = "Posts")
                     },
                     selected = currentRoute == "posts",
                     onClick = {
