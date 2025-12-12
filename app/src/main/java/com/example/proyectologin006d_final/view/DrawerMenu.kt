@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
@@ -152,6 +153,18 @@ fun DrawerMenu(
                         navController.navigate(route = "posts")
                         onCloseDrawer()
                     }
+                )
+            }
+
+            item {// inicio item (Comentarios API)
+                NavigationDrawerItem(
+                    label = { Text("Comentarios") },
+                    selected = currentRoute?.startsWith("comentarios") == true,
+                    onClick = {
+                        navController.navigate("comentarios")
+                        onCloseDrawer()
+                    },
+                    icon = { Icon(Icons.Default.QuestionAnswer, contentDescription = "Comentarios") }
                 )
             }
 

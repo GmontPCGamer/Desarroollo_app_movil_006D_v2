@@ -17,10 +17,13 @@ import com.example.proyectologin006d_final.view.DrawerMenu
 import com.example.proyectologin006d_final.view.ProductoFormScreen
 import com.example.proyectologin006d_final.ui.map.MapScreen
 
-
+import androidx.compose.runtime.remember
+import com.example.proyectologin006d_final.viewmodel.ComentarioViewModel
+import com.example.proyectologin006d_final.ui.screens.ComentarioScreen
 import com.example.proyectologin006d_final.ui.screens.PostScreen
 import com.example.proyectologin006d_final.viewmodel.PostViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+
 
 @Composable
 fun AppNav() {
@@ -67,6 +70,11 @@ fun AppNav() {
         composable("posts") {
             val postViewModel: PostViewModel = viewModel()
             PostScreen(viewModel = postViewModel)
+        }
+
+        composable("comentarios") {
+            val viewModel = remember { ComentarioViewModel() }
+            ComentarioScreen(viewModel = viewModel)
         }
 
 //
