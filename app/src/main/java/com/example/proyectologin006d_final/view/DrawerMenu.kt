@@ -136,6 +136,27 @@ fun DrawerMenu(
                 )
             }
 
+            item { // inicio item (posts API)
+                NavigationDrawerItem(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Posts"
+                        )
+                    },
+                    label = {
+                        Text(text = "Posts (API)")
+                    },
+                    selected = currentRoute == "posts",
+                    onClick = {
+                        navController.navigate(route = "posts")
+                        onCloseDrawer()
+                    }
+                )
+            }
+
+
+
 
         } // fin Lazy
 

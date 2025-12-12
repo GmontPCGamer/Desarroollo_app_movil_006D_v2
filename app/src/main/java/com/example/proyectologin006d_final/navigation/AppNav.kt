@@ -17,6 +17,11 @@ import com.example.proyectologin006d_final.view.DrawerMenu
 import com.example.proyectologin006d_final.view.ProductoFormScreen
 import com.example.proyectologin006d_final.ui.map.MapScreen
 
+
+import com.example.proyectologin006d_final.ui.screens.PostScreen
+import com.example.proyectologin006d_final.viewmodel.PostViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 @Composable
 fun AppNav() {
     val navController = rememberNavController()
@@ -57,6 +62,13 @@ fun AppNav() {
             val username = backStackEntry.arguments?.getString("username").orEmpty()
             CatalogScreen(navController = navController, username = username)
         }
+
+
+        composable("posts") {
+            val postViewModel: PostViewModel = viewModel()
+            PostScreen(viewModel = postViewModel)
+        }
+
 
         composable(
             route = "levelup/{username}",
